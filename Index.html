@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Math Duel — Home</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+	<style>
+		:root{
+			--bg:#0b1020;
+			--bg-2:#0e142b;
+			--text:#eef3ff;
+			--muted:#9aa6c7;
+			--glass:rgba(255,255,255,0.06);
+			--glass-stroke:rgba(255,255,255,0.16);
+			--primary:#7c5cff;
+			--radius:16px;
+			--shadow:0 10px 30px rgba(0,0,0,0.35);
+		}
+		*{box-sizing:border-box}
+		html,body{height:100%}
+		body{
+			margin:0;
+			font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+			color:var(--text);
+			background: radial-gradient(1200px 800px at 50% -10%, #2b2f6a33, transparent 60%), linear-gradient(180deg, var(--bg), var(--bg-2));
+			display:flex;
+			align-items:flex-start;
+			justify-content:center;
+		}
+		.container{
+			width:min(900px, 94%);
+			margin:28px auto;
+		}
+
+		/* Top identity (centered) */
+		.identity{
+			display:flex;
+			align-items:center;
+			justify-content:center;
+			gap:14px;
+			margin:10px 0 26px;
+		}
+		.avatar{
+			width:72px; height:72px; border-radius:14px; overflow:hidden;
+			background: #11183a; border:1px solid var(--glass-stroke);
+			box-shadow: var(--shadow);
+			image-rendering: pixelated;
+		}
+		.avatar img{ width:100%; height:100%; object-fit:cover }
+		.username{
+			font-weight:800; font-size:20px; letter-spacing:0.2px;
+			background: linear-gradient(180deg, #ffffff, #cbd5ff);
+			-webkit-background-clip:text; background-clip:text; color:transparent;
+			text-shadow: 0 0 0 rgba(0,0,0,0);
+		}
+
+		/* Option bar */
+		.option-bar{
+			display:grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap:14px;
+			margin-top:8px;
+		}
+		.option{
+			position:relative;
+			border-radius:var(--radius);
+			background: var(--glass);
+			border:1px solid var(--glass-stroke);
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			min-height:86px;
+			padding:16px;
+			display:flex;
+			align-items:center;
+			justify-content:space-between;
+			gap:12px;
+			cursor:pointer;
+			transition: transform .08s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+			box-shadow: 0 8px 20px rgba(0,0,0,0.25) inset, 0 10px 24px rgba(0,0,0,0.15);
+		}
+		.option:hover{
+			transform: translateY(-2px);
+			border-color: rgba(124,92,255,0.6);
+			box-shadow: 0 10px 28px rgba(124,92,255,0.18), 0 8px 20px rgba(0,0,0,0.25) inset;
+			background: rgba(124,92,255,0.08);
+		}
+		.option .left{
+			display:flex; align-items:center; gap:12px;
+		}
+		.icon{
+			width:38px; height:38px; border-radius:10px; display:grid; place-items:center;
+			background: rgba(255,255,255,0.08);
+			border:1px solid var(--glass-stroke);
+			font-weight:900;
+		}
+		.profile{
+			display: flex; flex: auto; align-items: center; gap: 12px;
+		}
+
+		.title{
+			font-weight:800; font-size:16px;
+		}
+		.sub{
+			color:var(--muted); font-size:12px; margin-top:2px;
+		}
+		.cta{
+			font-weight:700; color:#dfe3ff; font-size:13px; opacity:0.9;
+			padding:8px 12px; border-radius:999px; border:1px solid var(--glass-stroke); background: rgba(255,255,255,0.06);
+		}
+
+		/* Hover stats (glass tooltip) */
+		.stats{
+			position:absolute;
+			inset:auto 10px -12px 10px;
+			transform: translateY(8px);
+			opacity:0;
+			pointer-events:none;
+			transition: opacity .18s ease, transform .18s ease;
+			background: rgba(12,18,48,0.9);
+			border:1px solid var(--glass-stroke);
+			border-radius:12px;
+			padding:10px 12px;
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			box-shadow: var(--shadow);
+		}
+		.option:hover .stats{
+			opacity:0; transform: translateY(0);
+		}
+		.stat-line{
+			display:flex; align-items:center; justify-content:space-between; gap:10px;
+			font-size:13px;
+		}
+		.stat-line + .stat-line{ margin-top:6px }
+		.win{ color:#3ddc97; font-weight:800 }
+		.lose{ color:#ff6b6b; font-weight:800 }
+
+		/* Small helpers */
+		.header-line{
+			margin:14px 0 18px;
+			border-bottom:1px solid rgba(255,255,255,0.08);
+		}
+		.center-note{
+			text-align:center; color:var(--muted); margin-top:14px; font-size:13px;
+		}
+
+		@media (max-width: 760px){
+			.option-bar{ grid-template-columns: 1fr }
+			.avatar{ width:64px; height:64px }
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<!-- Identity -->
+		<div class="identity" aria-label="Player identity">
+			<div class="avatar">
+				<img id="playerAvatar" alt="Player avatar (pixel art animal)" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Tiger" />
+			</div>
+			<div class="username" id="username">@tiger_math</div>
+		</div>
+
+		<div class="header-line"></div>
+
+		<!-- Option bar -->
+		<div class="option-bar" aria-label="Game options">
+			<!-- Quick Match -->
+			<div class="option" id="quickMatch" tabindex="0" role="button" aria-describedby="stats-quick">
+				<div class="left">
+					<div class="icon">⚡</div>
+					<div>
+						<div class="profile";>
+						<div class="title">Quick Match</div>
+						<div class="sub">Fast 1v1 — jump in</div>
+						<a href="quick_match.html">Play</a>
+					</div>
+				</div>
+				</div>
+				
+				<div class="stats" id="stats-quick" role="tooltip" aria-live="polite">
+					<div class="stat-line"><span>Wins</span><span class="win" id="quickWins">—</span></div>
+					<div class="stat-line"><span>Losses</span><span class="lose" id="quickLosses">—</span></div>
+				</div>
+			</div>
+
+			<!-- Ranked Match -->
+			<div class="option" id="rankedMatch" tabindex="0" role="button" aria-describedby="stats-ranked">
+				<div class="left">
+					<div class="icon">🏆</div>
+					<div>
+						<div class="title">Ranked Match</div>
+						<div class="sub">ELO ladder & divisions</div>
+					</div>
+				</div>
+				<div class="cta">Queue</div>
+				<div class="stats" id="stats-ranked" role="tooltip" aria-live="polite">
+					<div class="stat-line"><span>Wins</span><span class="win" id="rankedWins">—</span></div>
+					<div class="stat-line"><span>Losses</span><span class="lose" id="rankedLosses">—</span></div>
+				</div>
+			</div>
+
+			<!-- Last One Standing -->
+			<div class="option" id="lastOneStanding" tabindex="0" role="button" aria-describedby="stats-los">
+				<div class="left">
+					<div class="icon">🎯</div>
+					<div>
+						<div class="title">Last One Standing</div>
+						<div class="sub">Elimination survival</div>
+					</div>
+				</div>
+				<div class="cta">Enter</div>
+				<div class="stats" id="stats-los" role="tooltip" aria-live="polite">
+					<div class="stat-line"><span>Wins</span><span class="win" id="losWins">—</span></div>
+					<div class="stat-line"><span>Losses</span><span class="lose" id="losLosses">—</span></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="center-note">Click an option to see your Win/Loss.</div>
+	</div>
+
+	<script>
+		// Demo: populate avatar/username and mock stats
+		const username = '@tiger_math';
+		const avatarSeeds = ['Tiger','Fox','Panda','Penguin','Cat','Dog','Koala','Lion','Bear','Rabbit'];
+		function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+		function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min }
+
+		document.getElementById('username').textContent = username;
+		document.getElementById('playerAvatar').src = 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + rand(avatarSeeds);
+
+		const stats = {
+			quick: { wins: randInt(10, 80), losses: randInt(5, 60) },
+			ranked: { wins: randInt(5, 40), losses: randInt(5, 40) },
+			los: { wins: randInt(1, 20), losses: randInt(1, 25) }
+		};
+		document.getElementById('quickWins').textContent = stats.quick.wins;
+		document.getElementById('quickLosses').textContent = stats.quick.losses;
+		document.getElementById('rankedWins').textContent = stats.ranked.wins;
+		document.getElementById('rankedLosses').textContent = stats.ranked.losses;
+		document.getElementById('losWins').textContent = stats.los.wins;
+		document.getElementById('losLosses').textContent = stats.los.losses;
+
+		// Click handlers (replace with real navigation later)
+		document.getElementById('quickMatch').addEventListener('click', () => alert('Queueing for Quick Match...'));
+		document.getElementById('rankedMatch').addEventListener('click', () => alert('Queueing for Ranked Match...'));
+		document.getElementById('lastOneStanding').addEventListener('click', () => alert('Joining Last One Standing...'));
+
+		// Keyboard accessibility: show stats on focus as well
+		['quickMatch','rankedMatch','lastOneStanding'].forEach(id => {
+			const el = document.getElementById(id);
+			el.addEventListener('keydown', (e) => {
+				if(e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					el.click();
+				}
+			});
+		});
+	</script>
+</body>
+</html>

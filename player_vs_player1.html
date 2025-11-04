@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Math Duel — Local PvP</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+	<style>
+		:root{
+			--bg:#0b1020;
+			--bg-2:#0e142b;
+			--text:#eef3ff;
+			--muted:#9aa6c7;
+			--glass:rgba(255,255,255,0.06);
+			--glass-2:rgba(255,255,255,0.10);
+			--glass-stroke:rgba(255,255,255,0.16);
+			--primary:#7c5cff;
+			--radius:16px;
+			--shadow:0 10px 30px rgba(0,0,0,0.35);
+			--win:#3ddc97;
+			--lose:#ff6b6b;
+		}
+		*{box-sizing:border-box}
+		html,body{height:100%}
+		body{
+			margin:0;
+			font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+			color:var(--text);
+			background: radial-gradient(1200px 800px at 50% -10%, #2b2f6a33, transparent 60%), linear-gradient(180deg, var(--bg), var(--bg-2));
+			display:flex;
+			align-items:flex-start;
+			justify-content:center;
+			visibility:hidden;
+		}
+		body[data-ready="true"]{ visibility:visible }
+
+		.container{ width:min(1000px, 94%); margin:28px auto; }
+
+		.identity{
+			display:flex; align-items:center; justify-content:center; gap:14px; margin:10px 0 18px;
+		}
+		.avatar{
+			width:62px; height:62px; border-radius:14px; overflow:hidden;
+			background:#11183a; border:1px solid var(--glass-stroke); box-shadow:var(--shadow);
+			image-rendering:pixelated;
+		}
+		.avatar img{ width:100%; height:100%; object-fit:cover }
+		.username{
+			font-weight:800; font-size:20px; letter-spacing:0.2px;
+			background: linear-gradient(180deg, #ffffff, #cbd5ff);
+			-webkit-background-clip:text; background-clip:text; color:transparent;
+		}
+		.header-line{ margin:12px 0 16px; border-bottom:1px solid rgba(255,255,255,0.08); }
+
+		.panel{
+			border-radius:var(--radius);
+			background:var(--glass);
+			border:1px solid var(--glass-stroke);
+			backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+			box-shadow: 0 8px 20px rgba(0,0,0,0.25) inset, 0 10px 24px rgba(0,0,0,0.15);
+			padding:16px;
+		}
+
+		.topbar{
+			display:flex; align-items:center; justify-content:space-between; gap:12px;
+			margin-bottom:12px;
+		}
+		.badges{ display:flex; gap:8px; flex-wrap:wrap; }
+		.badge{
+			padding:6px 10px; border-radius:999px; font-size:12px; color:#eaf0ff;
+			border:1px solid var(--glass-stroke); background:rgba(255,255,255,0.07);
+		}
+		.timer{
+			font-weight:800; font-variant-numeric:tabular-nums;
+			padding:6px 10px; border-radius:10px; border:1px solid var(--glass-stroke);
+			background: rgba(255,255,255,0.08);
+		}
+
+		.qwrap{
+			background: var(--glass-2);
+			border:1px solid var(--glass-stroke);
+			border-radius:12px; padding:14px; margin-bottom:14px;
+			text-align:center;
+		}
+		.question{
+			font-weight:800; font-size:28px; letter-spacing:0.4px; margin:6px 0 6px;
+			min-height:36px;
+		}
+		.subtle{ font-size:12px; color:var(--muted); }
+
+		.grid{
+			display:grid; grid-template-columns: 1fr 1fr; gap:14px;
+		}
+		@media (max-width:780px){ .grid{ grid-template-columns: 1fr } }
+
+		.card{
+			background: var(--glass-2);
+			border:1px solid var(--glass-stroke);
+			border-radius:12px; padding:14px;
+			backdrop-filter: blur(10px);
+		}
+		.card h3{ margin:0 0 10px; font-size:14px; color:var(--muted) }
+
+		.row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+		.pill{ padding:6px 10px; border-radius:999px; border:1px solid var(--glass-stroke); background: rgba(255,255,255,0.08); font-variant-numeric:tabular-nums; }
+
+		.answerRow{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+		input[type="number"]{
+			flex:1; min-width:0;
+			padding:10px 12px; border-radius:10px; outline:none;
+			border:1px solid var(--glass-stroke); background:rgba(255,255,255,0.06);
+			color:var(--text); font-size:16px;
+		}
+		button{
+			padding:10px 14px; border-radius:10px; border:1px solid var(--glass-stroke);
+			background: linear-gradient(180deg, rgba(124,92,255,0.25), rgba(124,92,255,0.15));
+			color:#fff; font-weight:700; cursor:pointer;
+			transition: transform .05s ease, box-shadow .2s ease;
+		}
+		button:hover{ transform: translateY(-1px) }
+		button:disabled{ opacity:0.6; cursor:not-allowed }
+
+		.small{ font-size:12px; color:var(--muted); min-height:16px; }
+		.win{ color:var(--win); font-weight:800 }
+		.lose{ color:var(--lose); font-weight:800 }
+
+		.result{
+			text-align:center; padding:18px; border-radius:12px;
+			background:rgba(255,255,255,0.08); border:1px solid var(--glass-stroke);
+			margin-top:12px;
+		}
+		.big{ font-size:22px; font-weight:800; margin:8px 0 }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="identity" aria-label="Players">
+			<div class="avatar">
+				<img id="p1Avatar" alt="Player 1 avatar" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Tiger" />
+			</div>
+			<div class="username" id="p1Name">@player_one</div>
+			<div class="avatar">
+				<img id="p2Avatar" alt="Player 2 avatar" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Fox" />
+			</div>
+			<div class="username" id="p2Name">@player_two</div>
+		</div>
+
+		<div class="header-line"></div>
+
+		<div class="panel">
+			<div class="topbar">
+				<div class="badges">
+					<span class="badge" id="qProgress">Question 1 / 10</span>
+					<span class="badge" id="difficultyBadge">Difficulty: 1</span>
+				</div>
+				<div class="timer" id="timer">00:10</div>
+			</div>
+
+			<div class="qwrap">
+				<div class="question" id="questionText"></div>
+				<div class="subtle" id="qHint">Both players answer before the timer ends.</div>
+			</div>
+
+			<div class="grid">
+				<!-- Player 1 -->
+				<div class="card">
+					<h3>Player 1</h3>
+					<div class="row" style="margin-bottom:8px">
+						<span class="small">Score</span>
+						<span class="pill" id="p1Score">0</span>
+					</div>
+					<div class="answerRow">
+						<input type="number" id="p1Input" inputmode="numeric" placeholder="Player 1 answer" />
+						<button id="p1Btn">Submit</button>
+					</div>
+					<div class="small" id="p1Feedback"></div>
+				</div>
+
+				<!-- Player 2 -->
+				<div class="card">
+					<h3>Player 2</h3>
+					<div class="row" style="margin-bottom:8px">
+						<span class="small">Score</span>
+						<span class="pill" id="p2Score">0</span>
+					</div>
+					<div class="answerRow">
+						<input type="number" id="p2Input" inputmode="numeric" placeholder="Player 2 answer" />
+						<button id="p2Btn">Submit</button>
+					</div>
+					<div class="small" id="p2Feedback"></div>
+				</div>
+			</div>
+
+			<div class="result" id="result" style="display:none">
+				<div class="big" id="resultTitle">Results</div>
+				<div style="display:flex; gap:10px; justify-content:center; margin:8px 0 2px;">
+					<span class="pill">P1: <span id="finalP1">0</span></span>
+					<span class="pill">P2: <span id="finalP2">0</span></span>
+					<span class="pill">Correct total: <span id="finalCorrect">0</span>/10</span>
+				</div>
+				<div class="small" id="resultNote" style="margin-top:6px"></div>
+				<div style="margin-top:12px">
+					<button id="playAgain">Play Again</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// Reveal after DOM is ready to prevent flashes
+		document.addEventListener('DOMContentLoaded', () => {
+			document.body.setAttribute('data-ready','true');
+		});
+	</script>
+
+	<script>
+		// Identity demo
+		const seeds = ['Tiger','Fox','Panda','Penguin','Cat','Dog','Koala','Lion','Bear','Rabbit'];
+		function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+		document.getElementById('p1Avatar').src = 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + rand(seeds);
+		document.getElementById('p2Avatar').src = 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + rand(seeds);
+
+		// Config
+		const TOTAL_QUESTIONS = 10;
+		const BASE_TIME = 10; // seconds each question
+
+		// DOM
+		const qText = document.getElementById('questionText');
+		const qHint = document.getElementById('qHint');
+		const qProgress = document.getElementById('qProgress');
+		const difficultyBadge = document.getElementById('difficultyBadge');
+		const timerEl = document.getElementById('timer');
+
+		const p1Input = document.getElementById('p1Input');
+		const p1Btn = document.getElementById('p1Btn');
+		const p1Feedback = document.getElementById('p1Feedback');
+		const p1ScoreEl = document.getElementById('p1Score');
+
+		const p2Input = document.getElementById('p2Input');
+		const p2Btn = document.getElementById('p2Btn');
+		const p2Feedback = document.getElementById('p2Feedback');
+		const p2ScoreEl = document.getElementById('p2Score');
+
+		const resultBox = document.getElementById('result');
+		const resultTitle = document.getElementById('resultTitle');
+		const resultNote = document.getElementById('resultNote');
+		const finalP1 = document.getElementById('finalP1');
+		const finalP2 = document.getElementById('finalP2');
+		const finalCorrect = document.getElementById('finalCorrect');
+		const playAgainBtn = document.getElementById('playAgain');
+
+		// State
+		let index = 0;
+		let difficulty = 1;
+		let timerId = null;
+		let timeLeft = BASE_TIME;
+
+		let currentQuestion = null;
+		let p1Score = 0;
+		let p2Score = 0;
+		let totalCorrect = 0;
+		let p1Answered = false;
+		let p2Answered = false;
+
+		// Helpers
+		function formatTime(sec){
+			const s = Math.max(0, sec|0);
+			return `00:${s.toString().padStart(2,'0')}`;
+		}
+		function rngInt(min, max){ return Math.floor(Math.random()*(max-min+1)) + min }
+		function nextDifficulty(i){ return Math.min(5, 1 + Math.floor(i/2)); }
+		function makeEasyOperands(level){
+			const ranges = {
+				1: { a:[1,9], b:[1,9] },
+				2: { a:[2,12], b:[1,12] },
+				3: { a:[3,15], b:[2,12] },
+				4: { a:[5,20], b:[2,15] },
+				5: { a:[6,25], b:[3,18] }
+			};
+			const r = ranges[level] || ranges[1];
+			return [rngInt(r.a[0], r.a[1]), rngInt(r.b[0], r.b[1])];
+		}
+		function generateQuestion(level){
+			const ops = ['+','-','×','÷'];
+			const op = ops[rngInt(0, ops.length-1)];
+			let a,b,answer,text;
+			if(op === '+'){
+				[a,b] = makeEasyOperands(level);
+				answer = a + b;
+				text = `${a} + ${b}`;
+			}else if(op === '-'){
+				[a,b] = makeEasyOperands(level);
+				if(b>a) [a,b] = [b,a];
+				answer = a - b;
+				text = `${a} - ${b}`;
+			}else if(op === '×'){
+				[a,b] = makeEasyOperands(level);
+				if(level<=2){ a = rngInt(2,9); b = rngInt(2,9); }
+				answer = a * b;
+				text = `${a} × ${b}`;
+			}else{
+				const base = level<=2 ? rngInt(2,9) : rngInt(2,12);
+				const mul = level<=3 ? rngInt(2,9) : rngInt(2,12);
+				a = base * mul; b = mul;
+				answer = base;
+				text = `${a} ÷ ${b}`;
+			}
+			return { text, answer };
+		}
+
+		function startTimer(){
+			clearInterval(timerId);
+			timeLeft = BASE_TIME;
+			timerEl.textContent = formatTime(timeLeft);
+			timerId = setInterval(() => {
+				timeLeft -= 1;
+				timerEl.textContent = formatTime(timeLeft);
+				if(timeLeft <= 0){
+					clearInterval(timerId);
+					moveNext();
+				}
+			}, 1000);
+		}
+
+		function setQuestion(){
+			p1Answered = false; p2Answered = false;
+			p1Feedback.textContent = ''; p2Feedback.textContent = '';
+			p1Input.value = ''; p2Input.value = '';
+			p1Input.disabled = false; p2Input.disabled = false;
+			p1Btn.disabled = false; p2Btn.disabled = false;
+
+			difficulty = nextDifficulty(index);
+			difficultyBadge.textContent = `Difficulty: ${difficulty}`;
+			qProgress.textContent = `Question ${index+1} / ${TOTAL_QUESTIONS}`;
+			currentQuestion = generateQuestion(difficulty);
+			qText.textContent = currentQuestion.text;
+			qHint.textContent = 'Both players answer before the timer ends.';
+			startTimer();
+			p1Input.focus();
+		}
+
+		function submitAnswer(player, value){
+			if(value === '' || value === null || value === undefined) return;
+			const num = Number(value);
+			if(player === 1){
+				if(p1Answered) return;
+				p1Answered = true;
+				p1Input.disabled = true; p1Btn.disabled = true;
+				if(num === currentQuestion.answer){
+					p1Score++; totalCorrect++;
+					p1ScoreEl.textContent = p1Score;
+					p1Feedback.innerHTML = `<span class="win">Correct!</span>`;
+				}else{
+					p1Feedback.innerHTML = `Wrong. Correct was <span class="win">${currentQuestion.answer}</span>.`;
+				}
+			}else{
+				if(p2Answered) return;
+				p2Answered = true;
+				p2Input.disabled = true; p2Btn.disabled = true;
+				if(num === currentQuestion.answer){
+					p2Score++; totalCorrect++;
+					p2ScoreEl.textContent = p2Score;
+					p2Feedback.innerHTML = `<span class="win">Correct!</span>`;
+				}else{
+					p2Feedback.innerHTML = `Wrong. Correct was <span class="win">${currentQuestion.answer}</span>.`;
+				}
+			}
+			// If both have answered early, briefly show feedback, then move on
+			if(p1Answered && p2Answered){
+				clearInterval(timerId);
+				setTimeout(moveNext, 600);
+			}
+		}
+
+		function moveNext(){
+			index++;
+			if(index >= TOTAL_QUESTIONS){
+				showResults();
+				return;
+			}
+			setQuestion();
+		}
+
+		function showResults(){
+			// Lock inputs
+			p1Input.disabled = true; p1Btn.disabled = true;
+			p2Input.disabled = true; p2Btn.disabled = true;
+
+			resultBox.style.display = '';
+			finalP1.textContent = p1Score;
+			finalP2.textContent = p2Score;
+			finalCorrect.textContent = totalCorrect;
+
+			if(p1Score > p2Score){
+				resultTitle.textContent = 'Player 1 Wins!';
+				resultTitle.style.color = 'var(--win)';
+				resultNote.textContent = 'Great match — P1 solved more questions.';
+			}else if(p2Score > p1Score){
+				resultTitle.textContent = 'Player 2 Wins!';
+				resultTitle.style.color = 'var(--win)';
+				resultNote.textContent = 'Great match — P2 solved more questions.';
+			}else{
+				resultTitle.textContent = 'Draw';
+				resultTitle.style.color = '#e8ecff';
+				resultNote.textContent = 'Neck and neck — try a rematch!';
+			}
+		}
+
+		// Events
+		p1Btn.addEventListener('click', () => submitAnswer(1, p1Input.value.trim()));
+		p2Btn.addEventListener('click', () => submitAnswer(2, p2Input.value.trim()));
+		p1Input.addEventListener('keydown', (e) => { if(e.key === 'Enter') p1Btn.click(); });
+		p2Input.addEventListener('keydown', (e) => { if(e.key === 'Enter') p2Btn.click(); });
+
+		playAgainBtn.addEventListener('click', () => {
+			clearInterval(timerId);
+			index = 0; p1Score = 0; p2Score = 0; totalCorrect = 0;
+			p1ScoreEl.textContent = '0'; p2ScoreEl.textContent = '0';
+			resultBox.style.display = 'none';
+			setQuestion();
+		});
+
+		// Init
+		setQuestion();
+	</script>
+</body>
+</html>
